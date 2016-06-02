@@ -1,0 +1,64 @@
+\documentclass[11pt]{amsart}
+\usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ...
+\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{algorithm, algorithmic}
+\usepackage{graphicx}
+
+\usepackage{amssymb, amsmath}
+\usepackage{natbib}
+
+\usepackage{setspace}
+\doublespacing
+
+%\usepackage{epstopdf}
+%\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+\newcommand{\RR}{\ensuremath{\mathbb{R}}}
+\DeclareMathOperator{\diag}{diag}
+
+\renewcommand{\leq}{\leqslant}
+\renewcommand{\geq}{\geqslant}
+
+\newcommand{\glad}{\textsc{glad}}
+\newcommand{\tightglad}{\textsc{g\hspace{-1pt}l\hspace{-1pt}a\hspace{-1pt}d}}
+
+\begin{document}
+
+\section{Preconditioning algorithm}
+
+\begin{algorithm}
+\caption{Preconditioning Algorithm}
+
+\begin{algorithmic}[1]
+\STATE Sort the rows of the $KN$ x $M$ qualifying constraint coefficient matrix.
+\STATE Compare adjacent rows of the qualifying constraint coefficient matrix and eliminate duplicate rows.
+\STATE Eliminate rows of the qualifying constraint coefficient matrix with all-zero coefficients.
+\STATE Determine the list of unique qualifying constraints by pairwise test.
+\STATE Determine the number of regions the hyperplanes cut the space into, $num\_r$, based on Zaslavsky's Theorem.
+\STATE Get the backlinks of the level of generating the nodes from two single hyperplanes.
+\STATE Sort the times of occurrence of each element in the backlinks decreasingly to make a list $hyper\_list$.
+\STATE Set $S$ and $nCuts$ to the set of unique, non-trivial qualifying constraints and the number of them.
+
+\FOR{each qualifying constraint $ki'$ in $hyper\_list$}
+    \STATE Generate $2^{nCuts - 1}/2$ different strings using $0, 1$ (represent $>$ and $<$).
+    \FOR{each $s$ in the strings}
+        \STATE Find a point, $x^{ki'}$, that lies on the $ki'-th$ qualifying constraint cut, and also constrained by the other qualifying constraints indicated by the signs in string $s$.
+        \STATE Identify the half-spaces of the $S\setminus {ki'}$ qualifying constraint cuts that contain $x^{ki'}$ and corresponding $\theta_{ki}^{B}$.
+        \STATE Append $\theta_{ki}^{B}$ of newly found to the list.
+        \IF{the number of $\theta^B$ in the list is equal to $num\_r$}
+            \STATE \textbf{return} the list of unique relaxed master problem regions to solve.
+        \ENDIF
+    \ENDFOR
+\ENDFOR
+
+\end{algorithmic}
+\end{algorithm}
+
+Zaslavsky's Theorem provides a way to count the number of regions into which an arrangement cut a space.
+We proposed a preconditioning algorithm to determine the actual regions by picking points on the hyperplane, because each point on one hyperplane without on the other hyperplanes can separate the space into two parts.
+We also adopt Zaslavsky's Theorem to know the total number of regions and also decide which hyperplane should be first started from.
+It is efficient to start finding points first on the hyperplane which is cut by the most times among all the hyperplanes.
+This trick helps to use the least number of points to finish finding all the regions.
+
+\end{document}  

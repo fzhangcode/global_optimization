@@ -1,0 +1,153 @@
+\documentclass[11pt]{amsart}
+\usepackage{geometry}                % See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   % ... or a4paper or a5paper or ...
+\usepackage[parfill]{parskip}    % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{algorithm, algorithmic}
+\usepackage{graphicx}
+
+\usepackage{amssymb, amsmath}
+\usepackage{natbib}
+
+\usepackage{setspace}
+\doublespacing
+\usepackage{comment}
+\includecomment{comment}
+
+%\usepackage{epstopdf}
+%\DeclareGraphicsRule{.tif}{png}{.png}{`convert #1 `dirname #1`/`basename #1 .tif`.png}
+
+\newcommand{\RR}{\ensuremath{\mathbb{R}}}
+\DeclareMathOperator{\diag}{diag}
+
+\renewcommand{\leq}{\leqslant}
+\renewcommand{\geq}{\geqslant}
+
+\newcommand{\glad}{\textsc{glad}}
+\newcommand{\tightglad}{\textsc{g\hspace{-1pt}l\hspace{-1pt}a\hspace{-1pt}d}}
+
+\begin{document}
+
+\section{Unique regions identification}
+%Nora Sleumer presented a cell enumeration algorithm in hyperplane arrangements, which is a computational geometric problem.
+We proposed a method to count and identify the regions defined by the $KN$ hyperplane arrangement $A$ with sign vectors.
+In our problem, all the hyperplanes pass one common point.
+Here we define two concepts about strict hyperplane and adjacent region.
+Strict hyperplane can be taken as non-redundant bounding hyperplane of some region.
+If two regions are existed when their sign vectors differ in only one hyperplane, then this hyperplane is a strict hyperplane.
+Adjacent region of region $r$ is the neighbor region of $r$ if only one strict hyperplane seperates them.
+The general idea of identifying unique regions is based on partial order set that we first initialize a root region and then find out all the adjacent regions of each found region.
+This guarantees that we can enumerate every unique region without missing one.
+The procedure includes two main components.
+One component is initializing a region defined by the hyperplanes using an interior point method.
+The other component is finding out the sign vectors of adjacent regions by finding the set of strict hyperplanes.
+The unique regions are represented by $\theta^B$ matrix, where the rows are regions and there are $KN$ columns. Each element of this matrix is either $0$ or $1$.
+
+In the procedure, first we remove all the duplicate and all-zero coefficients hyperplanes to get unique hyperplanes.
+Then we start from a specific region $r$ and put it into a open set.
+Open set is used to maintain a region list which need to be explored.
+Each time we pick one region from the open set for finding adjacent regions.
+Once finishing the step of finding adjacent regions, region $r$ will be moved into a closed set.
+Closed set is used to maintain a region list which already be explored.
+Also, if the adjacent region is a newly found one, it also need to be put into the open set for exploring.
+Finally, once the open set is empty, regions in the closed set are all the unique regions, and the number of the unique regions is the length of the closed set.
+This procedure begins from one region and expands to all the neighbors until no new neighbor is existed.
+
+The overview of this algorithm including two main components are shown below. $Ax=b$ are the equations of unique hyperplanes.
+\begin{algorithm}
+\caption{Unique regions identification Algorithm}
+\begin{algorithmic}[1]
+\STATE Sort the rows of the $KN$ x $M$ qualifying constraint coefficient matrix.
+\STATE Compare adjacent rows of the qualifying constraint coefficient matrix and eliminate duplicate rows.
+\STATE Eliminate rows of the qualifying constraint coefficient matrix with all-zero coefficients.
+\STATE Determine the list of unique qualifying constraints by pairwise test.
+\STATE Set $S$ and $num\_cuts$ to the set of unique, non-trivial qualifying constraints and the number of them.
+\STATE Initialize a region $root$ using an interior point method (Component 1).
+\STATE Put region $root$ into the open set.
+\IF {open set is not empty}
+  \STATE Get a region $R$ from the open set
+  \STATE Calculate the adjacent regions set $R\_adj$ (Component 2).
+  \STATE Put region $R$ into the closed set.
+  \FOR {each region $r$ in $R\_adj$}
+    \IF {$r$ is not in open set $and$ not in closed set}
+      \STATE Put region $r$ into open set.
+    \ENDIF
+  \ENDFOR
+\ENDIF
+\STATE Reflect the sign of the regions in the close set
+\STATE Get all the regions represented by string of 0 and 1
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Hyperplane filtering}
+Assuming there are two different hyperplanes $H_i$ and $H_j$ represented by $A_i=\left\{a_{i,0},...,a_{i,MK}\right\}$ and $A_j=\left\{a_{j,0},...,a_{j,MK}\right\}$.
+We take these two hyperplanes duplicated when
+\begin{equation}
+	 \frac{a_{i,0}}{a_{j,0}}=\frac{a_{i,1}}{a_{j,1}}=...=\frac{a_{i,MK}}{a_{j,MK}}=\frac{\sum_{l=0}^{MK}a_{i,l}}{\sum_{l=0}^{MK}a_{j,l}}, a_{j,l}!=0
+\end{equation}
+This can be converted to
+\begin{equation}
+	|\sum_{l=0}^{MK}a_{i,l}\cdot a_{j,n}-\sum_{l=0}^{MK}a_{j,l}\cdot a_{i,n}|\leqslant \tau, \forall n \epsilon [0,MK]
+\end{equation}
+where threshold $\tau$ is a very small positive value.
+
+We eliminate a hyperplane $H_i$ represented by $A_i=\left\{a_{i,0},...,a_{i,MK}\right\}$ from hyperplane arrangement $A$ if the coefficients of $A_i$ are all zero,
+\begin{flalign}
+	|a_{i,j}|\leqslant \tau,
+	&\ \forall a_{i,j} \epsilon A_i,
+	j\epsilon [0,MK]
+\end{flalign}
+
+\subsection{Interior point method}
+An interior point is found by solving the following optimization problem:
+\begin{flalign}\label{eqn:opt1}
+\text{maximize} &\  z \nonumber\\
+\text{subject to} &\  -A_ix + z \leqslant b_i, if \theta^B_i =0\\
+		  &\  A_ix + z \leqslant -b_i, if \theta^B_i =1\\
+&\    z>0
+\end{flalign}
+
+\begin{algorithm}
+\caption{Interior Point Method (Component 1)}
+\begin{algorithmic}[1]
+\STATE Generate $2^{num\_cuts}$ different strings using $0, 1$
+  \FOR {each $s$ in the strings}
+    \STATE Solve an optimization problem to get an interior point.
+    \IF {Get a interior point}
+    \STATE Get the $root$ region represented by $0$ and $1$.
+    \ENDIF
+  \ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Get adjacent regions}
+\begin{algorithm}
+\caption{Get adjacent regions (Component 2)}
+\begin{algorithmic}[1]
+
+\STATE Initialize an empty set $SH$ for strict hyperplanes.
+\STATE Initialize an adjacent region set $ADJ$
+
+\STATE \# Find out all the strict hyperplanes for region $R$.
+\FOR {each hyperplane $H$ of $num\_cuts$ hyperplanes}
+ \STATE Pick one hyperplane $H$ from all the hyperplanes definging region R.
+ \STATE Flip the sign of $H$ to get $H'$
+ \STATE Form a new hyperplane arrangement $A'$ with $H'$.
+ \STATE Solve the problem to get an interior point constrained by $A'$.
+ \IF {The interior point is not Non}
+ \STATE $H$ is a strict hyperplane and put into set $SH$.
+ \ELSE
+ \STATE $H$ is a redundant hyperplane.
+ \ENDIF
+\ENDFOR
+
+\STATE \# Find out all the adjacent regions for region $R$.
+\FOR {each strict hyperplane $sh$ in set $SH$}
+ \STATE Take the opposite sign $sh'$ of $sh$.
+ \STATE Form a adjacent region $adj$ based on $sh'$ and all the else hyperplanes.
+ \STATE Put $adj$ into set $ADJ$.
+\ENDFOR
+
+\end{algorithmic}
+\end{algorithm}
+
+\end{document}  

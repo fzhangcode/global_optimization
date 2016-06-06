@@ -33,9 +33,6 @@ initial values:
 
 	np.random.random_sample((M,K)) 
 
-tolerance:
-
-	e = 0.01 
 
 parallel processing in "get unique regions using cell numeration" and "solve master problems":
 
@@ -49,8 +46,18 @@ Results
 -----------
 Check 'results.csv'
 
+
 Finish running tests on the data sets of M=1, K=2, N=2.   
-It is running the data sets of M=1, K=3, n=2.
+tolerance:
+
+	e = 0.01 
+
+
+It is running the data sets of M=1, K=3, n=2.  
+tolerance:
+
+	e = 0.1 
+
 
 
 Archived Samples

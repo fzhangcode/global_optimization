@@ -1,0 +1,160 @@
+A key to the efficient application of GOP is partitioning the problem variables such that the master and sub problems can be solved efficiently. In our mixed-membership sparse matrix factorization problem we have the following master problem and subproblem.
+
+
+
+To form the dual subproblem, we use the fact that the dual conjugate of a norm $f_0 = \|\cdot\|$ is the indicator of the dual norm ball~\cite{boyd_book}[p223],
+\begin{equation*}
+f_0^*(y) = \left \{ 
+                \begin{array}{cl}
+                 0         & \|y\|_* \leq 1 \\
+                 \infty    & \text{ otherwise}
+               \end{array} 
+           \right. .
+\end{equation*}
+
+
+To make use of the conjugate dual, we rewrite the primal subproblem the standard form,
+\begin{flalign*}
+\text{minimize}     &\  f_0(\tilde{y} - \tilde{x}\tilde{\theta})\\
+\text{subject to}   &\  A\tilde{\theta} \preccurlyeq b\\
+                    &\  C\tilde{\theta} = d,
+\end{flalign*}
+where $A = -I_{KN}$, $b = -1_{KN}$, $d = 1_N$ and
+\begin{equation*}
+C = \left[
+        \begin{array}{cccc}
+            1_K^T & 0 & \dotsc & 0\\
+            0 & 1_K^T & \dotsc & 0\\
+            0 & 0 & \ddots & 0\\
+            0 & 0 & \dotsc & 1_K^T
+        \end{array}
+    \right],
+\end{equation*}
+
+and we have defined the following variables
+\begin{equation*}
+\tilde{y} = \left[
+        \begin{array}{c}
+            y_1\\
+            \vdots\\
+            y_N
+        \end{array}
+    \right]
+\tilde{\theta} = \left[
+        \begin{array}{c}
+            \theta_1\\
+            \vdots\\
+            \theta_N
+        \end{array}
+    \right]
+\tilde{x} = \left[
+        \begin{array}{cccc}
+            x & 0 & \dotsc & 0\\
+            0 & x & \dotsc & 0\\
+            \vdots & \vdots & \ddots & \vdots\\
+            0 & 0 & \dotsc & x
+        \end{array}
+    \right].
+\end{equation*}
+
+
+We define auxiliary variable $\gamma = \tilde{y} - \tilde{x}\tilde{\theta}$, solve for $\tilde{\theta}$ and substitute into the primal subproblem to recast it in terms of $\gamma$. Solving for $\tilde{\theta}$ gives \begin{equation}
+    \tilde{\theta} = \left( \tilde{x}^T \tilde{x} \right)^{-1} \left( \tilde{x}^T [\tilde{y} - \gamma] \right).
+\end{equation}
+
+Plugging $\tilde{\theta}$ into the primal subproblem gives
+\begin{flalign*}
+\text{minimize}     &\  f_0(\gamma)\\
+\text{subject to}   &\  \tilde{A}\gamma \preccurlyeq \tilde{b}\\
+                    &\  \tilde{C}\gamma = \tilde{d},
+\end{flalign*}
+where $\tilde{A} = (\tilde{x}^T\tilde{x})^{-1}\tilde{x}^T$, $\tilde{b} = (\tilde{x}^T\tilde{x})^{-1}\tilde{x}^T\tilde{y} - 1_{KN}$, $\tilde{C} = C \left( \tilde{x}^T \tilde{x} \right)^{-1} \tilde{x}^T$, $\tilde{d} = C \left( \tilde{x}^T \tilde{x} \right)^{-1} \tilde{x}^T \tilde{y} - 1_N$.
+
+Having cast the primal subproblem in standard form, the unconstrained dual subproblem is
+\begin{equation}
+g(\lambda, \nu) = -\tilde{b}^T \lambda -\tilde{d}^T \nu -f_0^*\left( -\tilde{A}^T \lambda - \tilde{C}^T \nu \right).
+\end{equation}
+and the constrained dualsub problem is
+\begin{flalign}\label{eqn:sub_dual1}
+\text{maximize}     &\  -\tilde{b}^T \lambda -\tilde{d}^T \nu \nonumber\\
+\text{subject to}   &\  \| \tilde{A}^T \lambda + \tilde{C}^T \nu \|_* \leq 1
+\end{flalign}
+
+Solving the dual subproblem gives optimal values $\{\lambda^*, \nu^*\}$. The objective of the dual subproblem becomes the constraint of the master problem,
+\begin{equation}
+Q \geq -\tilde{b}^T\lambda^* - \tilde{d}^T \nu^* = -\left[ (\tilde{x}^T\tilde{x})^{-1}\tilde{x}^T\tilde{y} - 1_{KN} \right]^T \lambda^* -\left[ C \left( \tilde{x}^T \tilde{x} \right)^{-1} \tilde{x}^T \tilde{y} - 1_N \right]^T \nu^*.
+\end{equation}
+
+The product $-\tilde{b}^T \lambda^*$ is the complementary slackness condition that $\theta_{ki} \leq 1$ and can be rewritten as
+\begin{equation}
+-\tilde{b}^T\lambda^* = \sum_{i=1}^N  \left( (x^Tx)^{-1}x^Ty_i - 1 \right) \lambda_{i}
+\end{equation}
+
+The product $-\tilde{d}^T \nu$ can be simplified and recast in the original $x$ variables to give the constraint,
+\begin{equation}
+-\tilde{d}^T \nu =  \left( 1_K^T (x^T x)^{-1} x^T y - 1_N \right)\nu^*.
+\end{equation}
+
+The master problem with the cutset from the subproblem is
+\begin{flalign}\label{eqn:master2}
+\text{minimize}     &\  Q \nonumber\\
+\text{subject to}   &\  \sum_{j=1}^M \sum_{k=1}^K z_{jk} \leq P \\ 
+                    &\  -z_{jk}M \leq x_{jk} \leq z_{jk}M \nonumber\\
+                    &\  Q \geq \left( 1_K^T (x^T x)^{-1} x^T y - 1_N \right)\nu^*. \nonumber
+\end{flalign}
+
+The inverse covariance matrix $(x^T x)^{-1}$ in the constraint is problematic because it turns the mixed-integer linear program into a mixed-integer program with non-linear constraints. Adding the norm constraint, $\|x\|_2 \leq 1$, makes the master problem a 0-1 mixed integer semidefinite program. 
+
+The constraint $\|x\|_2 \leq 1$ is equivalent to $x^Tx \leq I_K$. Using Schur's complement, this quadratic matrix inequality can be written as a linear matrix inequality
+\begin{equation*}
+\left[
+\begin{array}{cc}
+I_M & x \\
+x^T & I_K
+\end{array}
+\right] \geq 0.
+\end{equation*}
+
+Imposing the constaint $x^Tx \leq I_K$ on the master problem relaxes the constraint passed from the subproblem,
+\begin{equation}
+    \left( 1_K^T (x^T x)^{-1} x^T y - 1_N \right)\nu^* \geq \left( 1_K^T  x^T y - 1_N \right)\nu^*.
+\end{equation}
+
+The relaxed master problem is the following 0-1 mixed integer semidefinite program.
+\begin{flalign}\label{eqn:master}
+\text{minimize}     &\  Q \nonumber\\
+\text{subject to}   &\  \sum_{j=1}^M \sum_{k=1}^K z_{jk} \leq P \\ 
+                    &\  -z_{jk}M \leq x_{jk} \leq z_{jk}M \nonumber\\
+                    &\left[ \begin{array}{cc} I_M & x \\ x^T & I_K\end{array} \right] \geq 0 \nonumber \\
+                    &\  Q \geq \left( 1_K^T  x^T y - 1_N \right)\nu^*\nonumber \\
+                    & x \in \RR^{M \times K},\quad z \in \{0,1\}^{M \times K}. \nonumber
+\end{flalign}
+
+After each iteration an additional cut constraint is added to the master refining the solution space for $x$.
+
+\fbox{
+\begin{minipage}[c][15em][t]{.5\textwidth}
+\centering
+  {\bf Relaxed Master Problem}
+\begin{flalign*}\label{eqn:master1}
+\text{minimize}     &\  Q \\
+\text{subject to}   &\  \sum_{j=1}^M \sum_{k=1}^K z_{jk} \leq P \\ 
+                    &\  -z_{jk}M \leq x_{jk} \leq z_{jk}M \\
+                    &\left[ \begin{array}{cc} I_M & x \\ x^T & I_K\end{array} \right] \geq 0 \\
+                    &\  Q \geq \left( 1_K^T  x^T y - 1_N \right)\nu^* \\
+                    & x \in \RR^{M \times K},\  z \in \{0,1\}^{M \times K},\ Q \in \RR
+\end{flalign*}
+\end{minipage}
+}
+\fbox{
+\begin{minipage}[c][15em][t]{.5\textwidth}
+\centering
+  {\bf Primal Subproblem}
+  \begin{flalign*}
+    \text{minimize}     &\  \|y-x\theta\|_2\\
+    \text{subject to}   &\  \theta_i^T 1_K = 1 \\
+                        &\  0 \leq \theta_{ki} \leq 1 \\
+                        &\  \theta \in \RR^{K \times N}
+    \end{flalign*}
+\end{minipage}%
+}

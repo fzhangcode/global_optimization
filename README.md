@@ -1,6 +1,6 @@
 # global_optimization
 
-##Introduction
+## Introduction
 
  In recent years, several algorithms have been developed for mixed membership matrix factorization, but they only guarantee estimates from a local optimum. 
  Here, we derive a global optimization algorithm that provides a guaranteed 𝜖-global optimum for a sparse mixed membership matrix factorization problem. 
